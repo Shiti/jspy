@@ -13,11 +13,14 @@ var JSPY_D3 = function () {
     var tree = d3.layout.tree()
         .nodeSize([0, 20]);
 
-    var diagonal = d3.svg.diagonal()
-        .projection(function (d) {
-            return [d.y, d.x];
-        });
-
+    var line = d3.svg.line()
+        .x(function (d) {
+            return d.x;
+        })
+        .y(function (d) {
+            return d.y;
+        })
+        .interpolate("step-before");
 
     function plot(dataSet) {
         var plotData, svg;
@@ -26,9 +29,9 @@ var JSPY_D3 = function () {
 
         plotData = dataSet;
         svg = d3.select("#sequence-diagram .section-body .section-content").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("width", width + margin.left + margin.right)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         plotData.x0 = 0;
         plotData.y0 = 0;
@@ -127,28 +130,38 @@ var JSPY_D3 = function () {
                     return d.target.id;
                 });
 
+            function getPoints(d){
+                var points = [
+                    {x: d.source.y, y: d.source.x},
+                    {x: d.target.y, y: d.target.x}
+                ];
+                return line(points);
+            }
+
             // Enter any new links at the parent's previous position.
             link.enter().insert("path", "g")
                 .attr("class", "link")
                 .attr("d", function (d) {
-                    var o = {x: source.x0, y: source.y0};
-                    return diagonal({source: o, target: o});
+                    return getPoints(d);
                 })
                 .transition()
                 .duration(duration)
-                .attr("d", diagonal);
+                .attr("d", function(d){
+                    return getPoints(d);
+                });
 
             // Transition links to their new position.
             link.transition()
                 .duration(duration)
-                .attr("d", diagonal);
+                .attr("d", function(d){
+                    return getPoints(d);
+                });
 
             // Transition exiting nodes to the parent's new position.
             link.exit().transition()
                 .duration(duration)
                 .attr("d", function (d) {
-                    var o = {x: source.x, y: source.y};
-                    return diagonal({source: o, target: o});
+                   return getPoints(d);
                 })
                 .remove();
 
