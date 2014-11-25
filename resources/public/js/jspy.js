@@ -164,6 +164,9 @@ $(function() {
         }
     });
 
+    $("#renderer").change(function(){
+        $("#drawSelectedBtn").click();
+    });
     function zoom(zoomIn) {
         var element = $(".sequence-diagram");
         var currentZoom = element.attr("zoom") || 1;
